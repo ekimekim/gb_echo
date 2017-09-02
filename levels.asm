@@ -41,7 +41,7 @@ LevelLoop::
 	; Increment revevant things, check if we're done.
 	inc E
 	ld A, E
-	cp NUM_LEVELS
+	cp NUM_LEVELS + 1
 	jr z, .done
 	; TODO move HL to start of next level data
 

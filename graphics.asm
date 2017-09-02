@@ -105,8 +105,7 @@ ENDR
 ; Display game intro screen
 DisplayIntroScreen::
 	ld HL, IntroScreen
-	call DisplayScreen
-	jp ClearSprites
+	jp DisplayScreen
 
 
 ; Display level title screen. Draw the static screen then go back and fix the level number.
@@ -115,21 +114,9 @@ DisplayLevelTitle::
 	ld HL, LevelTitleScreen
 	call DisplayScreen
 	ld HL, TileGrid + 32*8 + 13 ; coord (8,13)
-	ld [HL], E
-	jp ClearSprites
-
-
-; Clear all sprite info while screen is off
-ClearSprites::
-	xor A
-	ld B, 40*4/8
-	ld HL, SpriteTable
-.loop
-REPT 8
-	ld [HL+], A
-ENDR
-	dec B
-	jr nz, .loop
+	ld A, "0"
+	add E
+	ld [HL], A
 	ret
 
 
@@ -154,6 +141,6 @@ DisableScreen::
 
 ; Turn on the screen. Clobbers A.
 EnableScreen::
-	ld A, %10010011 ; screen on, background map + sprites, unsigned tileset
+	ld A, %10010001 ; screen on, background map, unsigned tileset
 	ld [LCDControl], A	
 	ret
