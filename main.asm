@@ -38,8 +38,7 @@ Start::
 MainLoop::
 	; Display the intro screen
 	call DisplayIntroScreen
-	ld A, %10010011 ; screen on, background map + sprites, unsigned tileset
-	ld [LCDControl], A	
+	call EnableScreen
 
 	; Wait for user to press start
 	ld D, ButtonStart

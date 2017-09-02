@@ -150,3 +150,10 @@ DisableScreen::
 	xor A
 	ld [LCDControl], A
 	ret
+
+
+; Turn on the screen. Clobbers A.
+EnableScreen::
+	ld A, %10010011 ; screen on, background map + sprites, unsigned tileset
+	ld [LCDControl], A	
+	ret
