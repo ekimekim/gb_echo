@@ -45,13 +45,8 @@ MainLoop::
 	ld D, ButtonStart
 	call WaitForPress
 
-	; Initialize level number and pass control to level loop
-	xor A
-	ld [LevelNumber], A
+	; Pass control to level loop
 	call LevelLoop
-
-	; Disable screen to reset to initial state
-	call DisableScreen
 
 	; Loop back and return to intro screen
 	jp MainLoop
