@@ -35,10 +35,11 @@ Start::
 
 MainLoop::
 	; Display the intro screen
-;	call DisplayIntroScreen
+	call DisplayIntroScreen
 	ld A, %10010011 ; screen on, background map + sprites, unsigned tileset
 	ld [LCDControl], A	
 
+	jp HaltForever ; TEST
 	; Wait for user to start
 ;	call WaitForStart
 
