@@ -66,3 +66,10 @@ SetROMBank: MACRO
 SetRAMBank: MACRO
 	ld [$4000], A
 	ENDM
+
+; Delay for \1 cycles
+Wait: MACRO
+REPT (\1)
+	nop
+ENDR
+	ENDM

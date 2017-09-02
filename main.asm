@@ -1,5 +1,7 @@
 include "ioregs.asm"
 include "hram.asm"
+include "joypad.asm"
+
 
 SECTION "Stack", WRAM0
 
@@ -39,9 +41,16 @@ MainLoop::
 	ld A, %10010011 ; screen on, background map + sprites, unsigned tileset
 	ld [LCDControl], A	
 
-	jp HaltForever ; TEST
-	; Wait for user to start
-;	call WaitForStart
+	; Wait for user to press start
+	ld D, ButtonStart
+	call WaitForPress
+
+	; TEST
+	ld B, 15
+	ld A, 0
+	ld DE, 1500
+	call PlayCh3
+	jp HaltForever
 
 	; Initialize level number and pass control to level loop
 	xor A
