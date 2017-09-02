@@ -1,8 +1,5 @@
+include "longcalc.asm"
 include "joypad.asm"
-
-
-; TODO TEMP
-NUM_LEVELS EQU 6
 
 
 SECTION "level methods", ROM0
@@ -15,7 +12,7 @@ LevelLoop::
 	call DisableScreen
 
 	ld E, 1 ; level number
-;	ld HL, LevelData ; Point to first level TODO
+	ld HL, LevelData ; Point to first level
 
 .loop
 
@@ -34,16 +31,22 @@ LevelLoop::
 
 	; Pass control to game loop. Make sure to save things.
 	push DE
+	push HL
 ;	call GameLoop TODO
+	pop HL
 	pop DE
 
 	; We finished the level.
 	; Increment revevant things, check if we're done.
-	inc E
-	ld A, E
-	cp NUM_LEVELS + 1
+	inc E ; increment level number
+	call SeekNextLevelData ; HL = next level data or LevelDataEnd
+	ld A, H
+	cp LevelDataEnd >> 8
+	jr nz, .notdone
+	ld A, L
+	cp LevelDataEnd & $ff
 	jr z, .done
-	; TODO move HL to start of next level data
+.notdone
 
 	; Not done yet, play individual level fanfare
 ;	call PlayLevelWin TODO
@@ -55,4 +58,20 @@ LevelLoop::
 	; All levels beaten! Play end of game fanfare
 ;	call PlayGameWin TODO
 
+	ret
+
+
+; Takes existing level data at HL and points HL to next level data
+SeekNextLevelData:
+	ld A, [HL+]
+	ld B, A ; B = width
+	ld A, [HL+]
+	ld C, A ; C = height
+	LongAddConst HL, 2 ; Including the two increments above, HL = start of data section
+	; Below loop does HL += width * height
+.loop
+	LongAdd H,L, 0,B, H,L ; HL += B
+	dec C
+	jr nz, .loop
+	; HL now points to just after this level data
 	ret
