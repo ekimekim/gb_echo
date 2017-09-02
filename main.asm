@@ -45,17 +45,13 @@ MainLoop::
 	ld D, ButtonStart
 	call WaitForPress
 
-	; TEST
-	ld B, 15
-	ld A, 0
-	ld DE, 1500
-	call PlayCh3
-	jp HaltForever
-
 	; Initialize level number and pass control to level loop
 	xor A
 	ld [LevelNumber], A
-;	call LevelLoop
+	call LevelLoop
+
+	; Disable screen to reset to initial state
+	call DisableScreen
 
 	; Loop back and return to intro screen
 	jp MainLoop

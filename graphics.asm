@@ -1,3 +1,4 @@
+include "ioregs.asm"
 include "vram.asm"
 include "macros.asm"
 include "longcalc.asm"
@@ -83,4 +84,23 @@ REPT 8
 ENDR
 	dec B
 	jr nz, .loop
+	ret
+
+
+; Block until next vblank and then safely turn off the screen.
+; Clobbers A.
+DisableScreen::
+	; Disable all interrupts except vblank
+	ld A, IntEnableVBlank
+	ld [InterruptsEnabled], A
+	; Cancel any old pending interrupts
+	xor A
+	ld [InterruptFlags], A
+	; Block until next vblank occurs
+	ei
+	halt
+	di
+	; Now it's safe to disable screen
+	xor A
+	ld [LCDControl], A
 	ret
