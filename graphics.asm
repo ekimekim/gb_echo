@@ -4,6 +4,14 @@ include "macros.asm"
 include "longcalc.asm"
 
 
+CheckScreenSize: MACRO
+_SIZE SET (\2)
+IF _SIZE != 360
+FAIL "Bad screen definition \1: Expected 0x168 bytes, got {_SIZE}"
+ENDC
+ENDM
+
+
 SECTION "Graphics data", ROM0
 
 TileData:
@@ -36,9 +44,31 @@ db "    PRESS START     "
 db "                    "
 EndIntroScreen:
 INTRO_SCREEN_SIZE EQU EndIntroScreen - IntroScreen
-IF INTRO_SCREEN_SIZE != 360
-FAIL "Bad screen definition: Expected 0x168 bytes, got {INTRO_SCREEN_SIZE}"
-ENDC
+	CheckScreenSize IntroScreen, INTRO_SCREEN_SIZE
+
+
+LevelTitleScreen:
+db "                    "
+db "                    "
+db "                    "
+db "                    "
+db "                    "
+db "                    "
+db "                    "
+db "                    "
+db "      LEVEL  0      " ; 0 will be replaced with level number. Coordinate = (8,13)
+db "                    "
+db "                    "
+db "                    "
+db "                    "
+db "                    "
+db "                    "
+db "                    "
+db "    PRESS START     "
+db "                    "
+EndLevelTitleScreen:
+LEVEL_TITLE_SCREEN_SIZE EQU EndLevelTitleScreen - LevelTitleScreen
+	CheckScreenSize LevelTitleScreen, LEVEL_TITLE_SCREEN_SIZE
 
 
 SECTION "Graphics routines", ROM0
@@ -53,23 +83,39 @@ LoadTiles::
 	ret
 
 
-; Load intro screen into VRAM while screen is off
-DisplayIntroScreen::
-	ld HL, IntroScreen
-	ld DE, TileGrid
-	ld B, 18
+; Load screen at HL into VRAM while screen is off.
+; Clobbers All but E.
+DisplayScreen:
+	ld BC, TileGrid
+	ld D, 18
 .loop
 REPT 19
 	ld A, [HL+]
-	ld [DE], A
-	inc DE
+	ld [BC], A
+	inc BC
 ENDR
 	ld A, [HL+]
-	ld [DE], A
-	LongAdd D,E, 0,13, D,E ; DE += 15, bringing it to the start of the next row
-	dec B
+	ld [BC], A
+	LongAdd B,C, 0,13, B,C ; BC += 15, bringing it to the start of the next row
+	dec D
 	jr nz, .loop
+	ret
 
+
+; Display game intro screen
+DisplayIntroScreen::
+	ld HL, IntroScreen
+	call DisplayScreen
+	jp ClearSprites
+
+
+; Display level title screen. Draw the static screen then go back and fix the level number.
+; Level number should be in E.
+DisplayLevelTitle::
+	ld HL, LevelTitleScreen
+	call DisplayScreen
+	ld HL, TileGrid + 32*8 + 13 ; coord (8,13)
+	ld [HL], E
 	jp ClearSprites
 
 
