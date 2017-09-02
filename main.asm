@@ -27,21 +27,10 @@ Start::
 	; Initialize sound settings
 	call InitSound
 
-; TEST
-	ld B, 15
-	ld DE, 1547
-	xor A
-	call PlayCh3
-	xor A
-;	call PlayCh1
-	xor A
-;	call PlayCh2
-	jp HaltForever
-
 	; Initialize tilemap
-;	call LoadTiles
+	call LoadTiles
 
-;	call MainLoop
+	call MainLoop
 
 
 MainLoop::
