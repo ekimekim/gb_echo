@@ -1,0 +1,24 @@
+A game for the Unofficial GBJam 2017 [https://itch.io/jam/unofficial-gbjam1]
+
+An attempt to create a game without any graphics, apart from a simple start screen
+with instructions.
+
+The idea is to navigate a maze using a very simple echolocation system.
+
+left/right to turn. step forward with up. A to tap but remain in place.
+These three actions make noise. For each noise, we work out the distance to the next wall
+in front, left and right of the player. We use this distance to generate a lag time
+and volume for the return noise.
+
+We have three sound probes, and three tone generators (we'll be using the custom wave
+generator as a third square wave tone generator).
+We map the two main tone generators to the left and right output channels,
+and the custom generator to both (at reduced volume?).
+
+Main game loop is greatly simplified due to not needing to base around vsync:
+	poll for keypress
+	react to keypress
+	play noise
+	calculate lags, assemble into list of what tones to play when
+	sleep loop to each tone change point, until all tones have been played
+	return to polling for keypresses
