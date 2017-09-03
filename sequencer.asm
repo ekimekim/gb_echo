@@ -1,3 +1,5 @@
+include "ioregs.asm"
+include "longcalc.asm"
 
 
 SEQ_MAX_ENTRIES EQU 32
@@ -43,12 +45,12 @@ InitSequencer::
 
 
 ; Add a series of notes stored at HL to the sequencer, at volume B, with start time offset C,
-; with player address D.
+; with channel number D.
 ; The series of notes should be in format:
 ;   byte length (number of notes)
 ;   for each note:
 ;     byte start time
-;     word frequency (big endian)
+;     word frequency (little endian, same as dw declaration)
 ;     byte length
 ; Clobbers all.
 SequenceNotes::
@@ -60,7 +62,15 @@ SequenceNotes::
 
 	; Find next free sequencer entry
 	ld A, [SequenceDataLen]
-	LongAddToA SequenceData>>8,SequenceData&$ff, D,E ; DE = SequenceData + [SequenceDataLen]
+	; Multiply A by SEQ_SIZE
+	ld D, A
+	ld B, SEQ_SIZE - 1
+.mul
+	add D
+	dec B
+	jr nz, .mul
+	; A = SEQ_SIZE * [SequenceDataLen]
+	LongAddToA SequenceData>>8,SequenceData&$ff, D,E ; DE = SequenceData + SEQ_SIZE * [SequenceDataLen] = &SequenceData[n]
 	ld A, [HL+]
 	ld B, A ; B = number of notes
 
@@ -70,7 +80,7 @@ SequenceNotes::
 	ld [SequenceDataLen], A
 
 .loop
-	ld A, [HL]+ ; A = note start time
+	ld A, [HL+] ; A = note start time
 	add C ; A = time offset + note start time
 	ld [DE], A ; set record time start
 	inc DE
@@ -135,6 +145,7 @@ PlaySequence::
 	ld [InterruptFlags], A ; clear any pending interrupts that might have already been firing
 	ld A, IntEnableTimer
 	ld [InterruptsEnabled], A ; enable only timer interrupt
+	ei
 
 	ld B, 0 ; B = current time
 
@@ -157,9 +168,9 @@ PlaySequence::
 	ld A, [HL+]
 	ld B, A ; B = volume
 	ld A, [HL+]
-	ld D, A
+	ld E, A
 	ld A, [HL+]
-	ld E, A ; DE = freq
+	ld D, A ; DE = freq
 	ld A, [HL+] ; A = length. note HL now points at next entry.
 	call PlayChC ; play sound!
 	pop DE
@@ -192,5 +203,8 @@ PlaySequence::
 	and $07 ; set z if all bottom 3 bits (3 used sound channels) are 0
 	jr nz, .waitloop
 
-	; Ok, now we're actually done.
+	; Ok, now we're actually done. Make sure to diable the timer and interrupts.
+	di
+	xor A
+	ld [TimerControl], A
 	ret

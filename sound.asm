@@ -68,7 +68,6 @@ PlayTone:
 	inc C ; C now points at freq hi / control register
 	ld A, D
 	or %11000000 ; start playing, stop when length expires, plus top 3 bits of frequency
-	and %10111111 ; TEST
 	ld [C], A
 	ret
 
@@ -111,7 +110,6 @@ ENDR
 	ld [SoundCh3FreqLo], A
 	ld A, D
 	or %11000000 ; start playing, stop when length expires, plus top 3 bits of frequency
-	and %10111111 ; TEST
 	ld [SoundCh3Control], A
 	ret
 
