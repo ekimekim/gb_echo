@@ -114,3 +114,13 @@ ENDR
 	and %10111111 ; TEST
 	ld [SoundCh3Control], A
 	ret
+
+
+; As PlayCh1-3, but selects channel from C (1-3)
+PlayChC::
+	dec C ; C = 0 to 2, set z if original value was 1
+	jp z, PlayCh1 ; note this is a tail call
+	dec C ; C = 0 to 1, set z if original value was 2
+	jp z, PlayCh2
+	; if we've reached here, must be 3
+	jp PlayCh3
