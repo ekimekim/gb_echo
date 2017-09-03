@@ -44,7 +44,7 @@ ENDR
 	ret
 
 
-; Tells channel 1 to play a note with frequency DE (0-2047) for length A (0-63)
+; Tells channel 1 to play a note with frequency DE (0-2047) for length A (1-64)
 ; at volume B (0-15). Clobbers A, C.
 PlayCh1::
 	ld C, SoundCh1LengthDuty & $ff
@@ -56,6 +56,13 @@ PlayCh2::
 	; FALL THROUGH
 PlayTone:
 	; A = length, B = volume, DE = freq, C = lower byte of address of length register
+	; first, adjust length to register's format (64-x = length)
+	push BC
+	ld B, A
+	ld A, 64
+	sub B
+	pop BC
+	; now write to registers
 	or TONE_CHANNEL_DUTY ; A = duty | length, which are non-overlapping bit ranges
 	ld [C], A ; set length and duty
 	inc C ; C now points at volume register
@@ -72,8 +79,13 @@ PlayTone:
 	ret
 
 
-; As PlayCh1, but for channel 3. Length may be up to 255.
+; As PlayCh1, but for channel 3.
 PlayCh3::
+	; Adjust length to register's format (256-x = length)
+	ld C, A
+	xor A ; 256 = 0, this works for purposes of subtraction
+	sub C
+
 	ld [SoundCh3Length], A ; set length
 
 	; Channel 3 doesn't have the fine volume control the others do. Instead, we set the volume
@@ -83,7 +95,6 @@ PlayCh3::
 	ld A, B
 	swap A
 	or B ; A = vvvv vvvv, where vvvv is the desired volume
-REPT 3
 	ld [C], A
 	inc C
 	ld [C], A
@@ -96,7 +107,6 @@ REPT 3
 	inc C
 	inc C
 	inc C
-ENDR
 	ld [C], A
 	inc C
 	ld [C], A

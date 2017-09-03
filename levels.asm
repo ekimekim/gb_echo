@@ -49,14 +49,18 @@ LevelLoop::
 .notdone
 
 	; Not done yet, play individual level fanfare
-;	call PlayLevelWin TODO
+	push DE
+	push HL
+	call PlayLevelWin
+	pop HL
+	pop DE
 
 	; Loop back for next level
 	jp .loop
 
 .done
 	; All levels beaten! Play end of game fanfare
-;	call PlayGameWin TODO
+	call PlayGameWin
 
 	ret
 
@@ -75,3 +79,25 @@ SeekNextLevelData:
 	jr nz, .loop
 	; HL now points to just after this level data
 	ret
+
+
+; Play end of level fanfare. Clobbers all.
+PlayLevelWin:
+	call InitSequencer
+	ld HL, LevelWin
+	ld B, 15
+	ld C, 0
+	ld D, 3
+	call SequenceNotes
+	jp PlaySequence
+
+
+; Play end of game fanfare. Clobbers all.
+PlayGameWin:
+	call InitSequencer
+	ld HL, GameWin
+	ld B, 15
+	ld C, 0
+	ld D, 3
+	call SequenceNotes
+	jp PlaySequence

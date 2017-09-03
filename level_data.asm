@@ -29,11 +29,21 @@ L1:
 	db "x     x  x"
 	db "x     x  x"
 	db "x     x  x"
-	db "x     x  x"
+	db "x     x* x"
 	db "xxxxxxxxxx"
 L1e:
 L1SIZE EQU L1e - L1
 	CheckSize L1, L1SIZE, 10, 10
+
+
+L2:
+	db 4, 3, 1, 1
+	db "xxxx"
+	db "x *x"
+	db "xxxx"
+L2e:
+L2SIZE EQU L2e - L2
+	CheckSize L2, L2SIZE, 4, 3
 
 
 LevelDataEnd::
