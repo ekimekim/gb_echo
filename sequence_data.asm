@@ -53,8 +53,8 @@ SoundTurn::
 ; Plays when player steps forward. Meant to evoke footsteps.
 SoundStep::
 	db 2
-	Note 0, NOTE_B2, 32
-	Note 12, NOTE_B2, 16
+	Note 0, NOTE_G4, 32
+	Note 12, NOTE_G4, 16
 
 
 ; Plays when player tries to step into a wall. A generic failure noise.
