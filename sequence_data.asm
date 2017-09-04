@@ -26,14 +26,18 @@ SoundLevelWin::
 
 ; Plays when game is completed
 SoundGameWin::
-	; PLACEHOLDER
-	db 6
-	Note 0, NOTE_C2, 64
-	Note 16, NOTE_C3, 64
-	Note 32, NOTE_C4, 64
-	Note 48, NOTE_C5, 64
-	Note 64, NOTE_C6, 64
-	Note 80, NOTE_C7, 64
+	db 11
+	Note 0, NOTE_C6, 64
+	Note 20, NOTE_C6, 16
+	Note 28, NOTE_C6, 64
+	Note 43, NOTE_C6, 64
+	Note 72, NOTE_C6, 16
+	Note 80, NOTE_C6, 16
+	Note 88, NOTE_C6, 32
+	Note 96, NOTE_A5, 32
+	Note 104, NOTE_B5, 32
+	Note 112, NOTE_C6, 64
+	Note 127, NOTE_C6, 64
 
 
 ; Plays when player taps. Short, simple, relatively high pitch so it's the clearest.
