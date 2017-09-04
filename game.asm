@@ -3,6 +3,18 @@ include "longcalc.asm"
 include "joypad.asm"
 
 
+; Echo-related constants
+BASE_DELAY EQU 32 ; Min time before any echo can happen
+DELAY_PER_BLOCK EQU 8 ; How much delay to add for each extra block of distance
+BASE_VOLUME EQU 10 ; Max volume an echo can play at
+VOLUME_PER_BLOCK EQU 1.0 ; Volume loss per block, as 16.16-bit fixed point float
+VOLUME_PER_BLOCK_16 EQU VOLUME_PER_BLOCK >> 12 ; Volume loss per block, times 16.
+
+PRINTT "Calculated VOLUME_PER_BLOCK_16 = {VOLUME_PER_BLOCK_16} from VOLUME_PER_BLOCK = "
+PRINTF VOLUME_PER_BLOCK
+PRINTT "\n"
+
+
 SECTION "Game vars", WRAM0
 
 ; To free registers and make things simpler/easier, we store things in memory and pull
@@ -54,7 +66,7 @@ GameLoop::
 
 .mainloop
 
-	; Wait for input, put it in B. TODO pause on start, cheat code?
+	; Wait for input, put it in B.
 	ld D, ButtonA | ButtonLeft | ButtonRight | ButtonUp
 	call WaitForPress
 
@@ -67,7 +79,7 @@ GameLoop::
 
 	; A pressed, play tap sound.
 	ld HL, SoundTap
-	jr .playSound
+	jp .playSound
 
 .noA
 	ld A, B
@@ -87,7 +99,7 @@ GameLoop::
 	and $03 ; mod 4
 	ld [PlayerDirection], A
 	ld HL, SoundTurn
-	jr .playSound
+	jp .playSound
 
 .noTurn
 	ld A, B
@@ -121,7 +133,7 @@ GameLoop::
 .noUp
 	; Nothing pressed. This shouldn't happen? Oh well, do nothing.
 	Debug "WaitForPress returned but no button pressed"
-	jr .mainloop
+	jp .mainloop
 
 .playSound
 	; We expect sound to play to be in HL.
@@ -166,16 +178,84 @@ GameLoop::
 	jp .mainloop
 
 
-
-
-
 ; Sequence either sound in HL or SoundCrystalEcho (depending on what we hit) to play
 ; in channel D after extending a probe in direction A to calculate delay echo and volume.
 ; Does not clobber HL.
 SequenceEcho:
-	; TODO
-	ret
+	push HL ; We'll restore HL a few times over the course of the routine
 
+	; First, work out distance to wall
+	call GetDirectionOffset ; BC = direction offset of given direction
+	ld A, [PlayerPos]
+	ld H, A
+	ld A, [PlayerPos+1]
+	ld L, A ; HL = player pos
+	ld E, -1 ; So E = 0 for initial loop
+.probeloop
+	inc E
+	LongAdd H,L, B,C, H,L ; HL += BC, ie. move 1 block in direction
+	ld A, [HL]
+	cp " " ; set z if A is empty space
+	jr z, .probeloop ; keep going if empty space
+	; now E holds number of blocks of empty space between us and wall,
+	; and A holds the first non-empty block we hit.
+	Debug "Got distance %E% hitting %A%"
+	push AF ; store what block we hit for later
+
+.noCrystal
+	; Delay = BASE_DELAY + DELAY_PER_BLOCK * blocks of empty space
+	; Volume = BASE_VOLUME - VOLUME_PER_BLOCK_16 * blocks of empty space / 16
+	; Do the multiplication parts first
+	ld C, BASE_DELAY
+	ld B, 0
+	ld H, DELAY_PER_BLOCK
+	ld L, VOLUME_PER_BLOCK_16
+.calcloop
+	ld A, C
+	add H
+	ld C, A ; C += H
+	ld A, B
+	add L
+	ld B, A ; B += L
+	dec E
+	jr nz, .calcloop
+	; Now C = delay, B = volume loss * 16
+
+	ld A, B
+	and $f0
+	swap A ; A = A/16
+	ld B, A
+	ld A, BASE_VOLUME
+	sub B ; A = volume, set carry if < 0, set z if 0
+
+	jr c, .ret
+	jr z, .ret ; if volume <= 0, don't play anything
+
+	ld B, A ; B = volume
+	pop AF ; restore A = block we hit
+	pop HL ; restore sound value
+	push HL ; this routine is going to clobber HL, we need to restore it again before returning
+	; C already = delay from above
+	; D already = channel from routine input
+
+	; Special case: did we hit the crystal?
+	cp "*"
+	jr nz, .notCrystal
+	; it is, then use alternate sound and halve volume (round up).
+	ld HL, SoundCrystalEcho
+	; Note that we know carry is unset right now because cp above resulted in zero
+	ld A, B
+	RRA ; rotate A right through carry flag, ie. add 0 to MSB and put LSB in carry
+	adc 0 ; add 1 if carry is set. we've now halved the volume, but rounded up.
+	ld B, A
+.notCrystal
+
+	Debug "Seq %HL% at time %C% vol %B% on ch %D%"
+	call SequenceNotes
+
+.ret
+	pop HL ; restore HL one last time
+	ret
 
 
 ; Calcluate offset in level data array that corresponds to 'forward' in the direction contained

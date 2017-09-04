@@ -68,4 +68,5 @@ SoundBonk::
 SoundCrystalEcho::
 	db 2
 	Note 0, NOTE_D6, 64
-	Note 16, NOTE_D6, 64
+	Note 15, NOTE_D6, 64
+	Note 22, NOTE_D6, 64
