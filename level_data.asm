@@ -20,7 +20,7 @@ LevelData::
 
 
 L1:
-	db 10, 10, 8, 3
+	db 10, 10, 3, 8
 	db "xxxxxxxxxx"
 	db "x        x"
 	db "x        x"

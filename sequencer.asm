@@ -38,6 +38,7 @@ SECTION "Sequencer methods", ROM0
 
 
 ; Reset the sequencer, ready to set up a sequence.
+; Clobbers A.
 InitSequencer::
 	xor A
 	ld [SequenceDataLen], A

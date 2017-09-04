@@ -32,7 +32,7 @@ LevelLoop::
 	; Pass control to game loop. Make sure to save things.
 	push DE
 	push HL
-;	call GameLoop TODO
+	call GameLoop
 	pop HL
 	pop DE
 
@@ -84,7 +84,7 @@ SeekNextLevelData:
 ; Play end of level fanfare. Clobbers all.
 PlayLevelWin:
 	call InitSequencer
-	ld HL, LevelWin
+	ld HL, SoundLevelWin
 	ld B, 15
 	ld C, 0
 	ld D, 3
@@ -95,7 +95,7 @@ PlayLevelWin:
 ; Play end of game fanfare. Clobbers all.
 PlayGameWin:
 	call InitSequencer
-	ld HL, GameWin
+	ld HL, SoundGameWin
 	ld B, 15
 	ld C, 0
 	ld D, 3

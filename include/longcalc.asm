@@ -22,6 +22,7 @@ LongAdd: MACRO
 
 ; Add 16-bit reg pair or immediate \1\2 to A, putting result in \3\4, which may be the same as \1\2.
 ; Clobbers A. Sets or resets carry as per normal add.
+; Does NOT work if you want to treat A as signed!
 LongAddToA: MACRO
 	add \2
 	ld \4, A
