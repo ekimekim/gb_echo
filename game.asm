@@ -4,7 +4,7 @@ include "joypad.asm"
 
 
 ; Echo-related constants
-BASE_DELAY EQU 32 ; Min time before any echo can happen
+BASE_DELAY EQU 20 ; Min time before any echo can happen (actually DELAY_PER_BLOCK less than that since min distance is 1)
 DELAY_PER_BLOCK EQU 8 ; How much delay to add for each extra block of distance
 BASE_VOLUME EQU 10 ; Max volume an echo can play at
 VOLUME_PER_BLOCK EQU 1.0 ; Volume loss per block, as 16.16-bit fixed point float
@@ -190,7 +190,7 @@ SequenceEcho:
 	ld H, A
 	ld A, [PlayerPos+1]
 	ld L, A ; HL = player pos
-	ld E, -1 ; So E = 0 for initial loop
+	ld E, 0
 .probeloop
 	inc E
 	LongAdd H,L, B,C, H,L ; HL += BC, ie. move 1 block in direction
@@ -217,6 +217,7 @@ SequenceEcho:
 	ld A, B
 	add L
 	ld B, A ; B += L
+	jr c, .noSound ; if B overflows, we know it's too far to hear anyway (volume < 0)
 	dec E
 	jr nz, .calcloop
 	; Now C = delay, B = volume loss * 16
@@ -228,8 +229,8 @@ SequenceEcho:
 	ld A, BASE_VOLUME
 	sub B ; A = volume, set carry if < 0, set z if 0
 
-	jr c, .ret
-	jr z, .ret ; if volume <= 0, don't play anything
+	jr c, .noSound
+	jr z, .noSound ; if volume <= 0, don't play anything
 
 	ld B, A ; B = volume
 	pop AF ; restore A = block we hit
@@ -252,7 +253,10 @@ SequenceEcho:
 
 	Debug "Seq %HL% at time %C% vol %B% on ch %D%"
 	call SequenceNotes
+	jr .ret
 
+.noSound
+	pop AF ; balance stack
 .ret
 	pop HL ; restore HL one last time
 	ret
