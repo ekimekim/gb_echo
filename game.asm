@@ -27,8 +27,8 @@ PlayerPos:
 	dw ; big endian, address in level data
 PlayerDirection:
 	db ; 0-3: up, right, down, left
-LevelBase:
-	dw ; big endian
+CheatTracking:
+	db
 
 
 SECTION "Game logic", ROM0
@@ -49,6 +49,7 @@ GameLoop::
 	ld C, A ; C = player Y pos
 	xor A
 	ld [PlayerDirection], A ; always start facing up
+	ld [CheatTracking], A
 	; Note HL now points at start of level data array proper
 
 	; calculate player start position from X pos (B), Y pos (C), width (D) and level data array base (HL)
@@ -66,9 +67,30 @@ GameLoop::
 
 .mainloop
 
-	; Wait for input, put it in B.
-	ld D, ButtonA | ButtonLeft | ButtonRight | ButtonUp
+	; Wait for any input, put it in B.
+	ld D, $ff
 	call WaitForPress
+
+	; Cheat code storage. Logic goes like this: we XOR in the current press.
+	; if the resulting value is NOT of the form 0*1* (ie. a run of 0s then a run of 1s,
+	; ie. a power of 2 - 1), we reset to 0. Since it's XOR, if the current pattern is 0000111,
+	; then the only value (assuming you can only press one button at once) which will not cause
+	; it to reset is 0001000. Hence, the cheat code is every button in ascending bit flag order:
+	; A B Select Start Right Left Up Down.
+	; If we reach ff, the cheat code activates and we instantly beat the level.
+	ld A, [CheatTracking]
+	Debug "%A% %B%"
+	xor B
+	ld C, A
+	inc A
+	ret z ; if inc A sets zero, A = $ff and cheat activates, we 'win' the level instantly
+	and C ; bit-twiddling trick: (x+1) & x == 0 iff x is of form 0*1*
+	ld A, C
+	jr z, .noResetCheat
+	Debug "reset"
+	xor A
+.noResetCheat
+	ld [CheatTracking], A
 
 	; To simplify logic, if we get more than one press, we only act on one.
 	; Players can Deal With It.
@@ -131,8 +153,7 @@ GameLoop::
 	jr .playSound
 
 .noUp
-	; Nothing pressed. This shouldn't happen? Oh well, do nothing.
-	Debug "WaitForPress returned but no button pressed"
+	; Nothing important pressed. Do nothing.
 	jp .mainloop
 
 .playSound
