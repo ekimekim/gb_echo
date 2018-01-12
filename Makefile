@@ -8,6 +8,10 @@ OBJS := $(ASMS:.asm=.o)
 INCLUDES := $(wildcard include/*.asm)
 ASSETS := $(shell find assets/ -type f)
 
+MBC := 0
+RAM_SIZE := 0
+TITLE := "ECHO"
+
 all: rom.gb
 
 include/assets/.uptodate: $(ASSETS) tools/assets_to_asm.py
@@ -19,7 +23,7 @@ include/assets/.uptodate: $(ASSETS) tools/assets_to_asm.py
 
 rom.gb: $(OBJS)
 	rgblink -n rom.sym -o $@ $^
-	rgbfix -v -p 0 $@
+	rgbfix -j -l 51 -m $(MBC) -r $(RAM_SIZE) -t $(TITLE) -v -p 0 $@
 
 bgb: rom.gb
 	bgb $<
